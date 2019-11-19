@@ -2,7 +2,16 @@
 //ID
 //Section
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * This class implements PageRank algorithm on simple graph structure.
@@ -19,9 +28,23 @@ public class PageRanker {
 	 * Where pid_1, pid_2, ..., pid_n are the page IDs of the page having links to page pid_1. 
 	 * You can assume that a page ID is an integer.
 	 */
+	
+	//Declare variables
+	List<String> rawData;
+	Map<Integer, List<Integer>> link;
+	Set<Integer> sinkNode;
+	
 	public void loadData(String inputLinkFilename){
+		rawData = new ArrayList<String>();
 		File f = new File(inputLinkFilename);
-		System.out.println(f.exists());
+		try {
+			Scanner sc = new Scanner(f);
+			while(sc.hasNextLine()) {
+				rawData.add(sc.nextLine());
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -29,7 +52,33 @@ public class PageRanker {
 	 * This method initialize the parameters for the PageRank algorithm including
 	 * setting an initial weight to each page.
 	 */
-	public void initialize(){}
+	public void initialize(){
+		link = new TreeMap<Integer, List<Integer>>();
+		for(String line : rawData) {
+			String[] elements = line.split(" ");
+			List<Integer> temp = new ArrayList<Integer>();
+			for(int i = 1; i < elements.length; i++) {
+				temp.add(Integer.parseInt(elements[i]));
+			}
+			link.put(Integer.parseInt(elements[0]), temp);
+		}
+
+		sinkNode = new HashSet<Integer>();
+		int i = 0;
+		for(Integer outerKey : link.keySet()) {
+			boolean found = false;
+			for(Integer innerKey : link.keySet()) {
+				if(!link.get(innerKey).isEmpty()) {
+					if(link.get(innerKey).contains(outerKey)) {
+						found = true;
+						break;
+					}
+				}
+			}
+			if(!found) sinkNode.add(outerKey);
+			System.out.println(++i);
+		}
+	}
 	
 	/**
 	 * Computes the perplexity of the current state of the graph. The definition
