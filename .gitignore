@@ -20,6 +20,3 @@
 # End of https://www.gitignore.io/api/linux
 
 bin/
-.classpath
-.project
-.settings/
