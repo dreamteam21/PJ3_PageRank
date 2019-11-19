@@ -1,15 +1,15 @@
 //Name(s):
 //ID
 //Section
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -30,19 +30,23 @@ public class PageRanker {
 	 */
 	
 	//Declare variables
-	List<String> rawData;
+	List<String> rawData; //read each line
 	Map<Integer, List<Integer>> link;
 	Set<Integer> sinkNode;
+	Set<Integer> outLink;
+	Set<Integer> pages;
 	
 	public void loadData(String inputLinkFilename){
 		rawData = new ArrayList<String>();
-		File f = new File(inputLinkFilename);
+		File file = new File(inputLinkFilename);
 		try {
-			Scanner sc = new Scanner(f);
-			while(sc.hasNextLine()) {
-				rawData.add(sc.nextLine());
+			BufferedReader br = new BufferedReader (new FileReader(file));
+			String line;
+			while((line = br.readLine()) != null) {
+				rawData.add(line);
 			}
-		} catch (FileNotFoundException e) {
+			br.close();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -54,30 +58,30 @@ public class PageRanker {
 	 */
 	public void initialize(){
 		link = new TreeMap<Integer, List<Integer>>();
+		outLink = new HashSet<Integer>();
+		pages = new HashSet<Integer>();
+		sinkNode = new HashSet<Integer>();
+//		System.out.println("line " + rawData.size());
+		
 		for(String line : rawData) {
 			String[] elements = line.split(" ");
-			List<Integer> temp = new ArrayList<Integer>();
+			for(int i = 0; i < elements.length; i++ ) {
+				pages.add(Integer.parseInt(elements[i]));
+				sinkNode.add(Integer.parseInt(elements[i]));
+				
+			}
 			for(int i = 1; i < elements.length; i++) {
-				temp.add(Integer.parseInt(elements[i]));
+				outLink.add(Integer.parseInt(elements[i]));
 			}
-			link.put(Integer.parseInt(elements[0]), temp);
 		}
+		
+//		Sink Node
+		sinkNode.removeAll(outLink);
+		System.out.println("all pages " + pages.size());
+//		System.out.println("out links " + outLink.size());
+		System.out.println("sink node " + sinkNode.size());
 
-		sinkNode = new HashSet<Integer>();
-		int i = 0;
-		for(Integer outerKey : link.keySet()) {
-			boolean found = false;
-			for(Integer innerKey : link.keySet()) {
-				if(!link.get(innerKey).isEmpty()) {
-					if(link.get(innerKey).contains(outerKey)) {
-						found = true;
-						break;
-					}
-				}
-			}
-			if(!found) sinkNode.add(outerKey);
-			System.out.println(++i);
-		}
+		
 	}
 	
 	/**
