@@ -31,7 +31,7 @@ public class PageRanker {
 	
 	//Declare variables
 	List<String> rawData; //read each line
-	Map<Integer, List<Integer>> link;
+	Map<Integer, List<Integer>> linkToP;
 	Set<Integer> sinkNode;
 	Set<Integer> outLink;
 	Set<Integer> pages;
@@ -57,7 +57,7 @@ public class PageRanker {
 	 * setting an initial weight to each page.
 	 */
 	public void initialize(){
-		link = new TreeMap<Integer, List<Integer>>();
+		linkToP = new TreeMap<Integer, List<Integer>>();
 		outLink = new HashSet<Integer>();
 		pages = new HashSet<Integer>();
 		sinkNode = new HashSet<Integer>();
@@ -65,6 +65,7 @@ public class PageRanker {
 		
 		for(String line : rawData) {
 			String[] elements = line.split(" ");
+			List<Integer> temp = new ArrayList<Integer>();
 			for(int i = 0; i < elements.length; i++ ) {
 				pages.add(Integer.parseInt(elements[i]));
 				sinkNode.add(Integer.parseInt(elements[i]));
@@ -72,6 +73,15 @@ public class PageRanker {
 			}
 			for(int i = 1; i < elements.length; i++) {
 				outLink.add(Integer.parseInt(elements[i]));
+				temp.add(Integer.parseInt(elements[i]));
+			}
+			linkToP.put(Integer.parseInt(elements[0]), temp);
+		}
+		int count = 0;
+		for(int i = 1; i <= pages.size(); i++) {
+			if(!linkToP.containsKey(i)) {
+				System.out.print(i+" ");
+				count++;
 			}
 		}
 		
@@ -80,6 +90,8 @@ public class PageRanker {
 		System.out.println("all pages " + pages.size());
 //		System.out.println("out links " + outLink.size());
 		System.out.println("sink node " + sinkNode.size());
+		System.out.println("link to P " + linkToP.size());
+		System.out.println("count  " + count);
 
 		
 	}
