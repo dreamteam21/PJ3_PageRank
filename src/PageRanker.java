@@ -1,17 +1,17 @@
-//Name(s):
-//ID
-//Section
+//Name(s): Phattharapong Poolthong, Anchisa Suklom, Narinda Adam
+//ID: 5888136, 6088015, 6088064
+//Section: 3
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * This class implements PageRank algorithm on simple graph structure.
@@ -32,6 +32,7 @@ public class PageRanker {
 	//Declare variables
 	List<String> rawData; //read each line
 	Map<Integer, List<Integer>> linkToP;
+	Map<Integer, Integer> outFromQ;
 	Set<Integer> sinkNode;
 	Set<Integer> outLink;
 	Set<Integer> pages;
@@ -56,44 +57,56 @@ public class PageRanker {
 	 * This method initialize the parameters for the PageRank algorithm including
 	 * setting an initial weight to each page.
 	 */
+
 	public void initialize(){
 		linkToP = new TreeMap<Integer, List<Integer>>();
-		outLink = new HashSet<Integer>();
-		pages = new HashSet<Integer>();
-		sinkNode = new HashSet<Integer>();
-//		System.out.println("line " + rawData.size());
-		
+		outFromQ = new TreeMap<Integer, Integer>();
+		outLink = new TreeSet<Integer>();
+		pages = new TreeSet<Integer>();
+		sinkNode = new TreeSet<Integer>();
+
 		for(String line : rawData) {
 			String[] elements = line.split(" ");
 			List<Integer> temp = new ArrayList<Integer>();
 			for(int i = 0; i < elements.length; i++ ) {
 				pages.add(Integer.parseInt(elements[i]));
 				sinkNode.add(Integer.parseInt(elements[i]));
-				
 			}
 			for(int i = 1; i < elements.length; i++) {
 				outLink.add(Integer.parseInt(elements[i]));
 				temp.add(Integer.parseInt(elements[i]));
+				
 			}
 			linkToP.put(Integer.parseInt(elements[0]), temp);
 		}
-		int count = 0;
-		for(int i = 1; i <= pages.size(); i++) {
-			if(!linkToP.containsKey(i)) {
-				System.out.print(i+" ");
-				count++;
+
+		for(Integer key : pages) {
+			if(!linkToP.containsKey(key)) {
+				linkToP.put(key, new ArrayList<Integer>());
 			}
 		}
 		
-//		Sink Node
+		for(Integer key: linkToP.keySet()) {
+			if(!linkToP.get(key).isEmpty()) {
+				for(Integer page: linkToP.get(key)) {
+					if(!outFromQ.containsKey(page)) {
+						outFromQ.put(page, 1);
+					}
+					else {
+						outFromQ.put(page, outFromQ.get(page)+1);
+					}
+				}
+			}
+		}
+		int count = 0;
+		for(Integer k: outFromQ.keySet()) {
+			System.out.println("key: "+ k+ "# "+ outFromQ.get(k));
+			count++;
+			if(count > 10) {
+				break;
+			}
+		}
 		sinkNode.removeAll(outLink);
-		System.out.println("all pages " + pages.size());
-//		System.out.println("out links " + outLink.size());
-		System.out.println("sink node " + sinkNode.size());
-		System.out.println("link to P " + linkToP.size());
-		System.out.println("count  " + count);
-
-		
 	}
 	
 	/**
