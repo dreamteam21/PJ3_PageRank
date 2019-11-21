@@ -31,11 +31,15 @@ public class PageRanker {
 	
 	//Declare variables
 	List<String> rawData; //read each line
+	List<Double> perplexity;
 	Map<Integer, List<Integer>> linkToP;
 	Map<Integer, Integer> outFromQ;
+	Map<Integer, Double> PR;
 	Set<Integer> sinkNode;
 	Set<Integer> outLink;
 	Set<Integer> pages;
+	double d = 0.85;
+
 	
 	public void loadData(String inputLinkFilename){
 		rawData = new ArrayList<String>();
@@ -61,9 +65,11 @@ public class PageRanker {
 	public void initialize(){
 		linkToP = new TreeMap<Integer, List<Integer>>();
 		outFromQ = new TreeMap<Integer, Integer>();
+		PR = new TreeMap<Integer, Double>();
 		outLink = new TreeSet<Integer>();
 		pages = new TreeSet<Integer>();
 		sinkNode = new TreeSet<Integer>();
+		perplexity = new ArrayList<Double>();
 
 		for(String line : rawData) {
 			String[] elements = line.split(" ");
@@ -98,28 +104,40 @@ public class PageRanker {
 				}
 			}
 		}
-		int count = 0;
-		for(Integer k: outFromQ.keySet()) {
-			System.out.println("key: "+ k+ "# "+ outFromQ.get(k));
-			count++;
-			if(count > 10) {
-				break;
-			}
-		}
 		sinkNode.removeAll(outLink);
+		
+		double initialPR = 1.0 / pages.size();
+		for(Integer key : pages) {
+			PR.put(key, initialPR);
+		}
 	}
 	
 	/**
 	 * Computes the perplexity of the current state of the graph. The definition
 	 * of perplexity is given in the project specs.
 	 */
-	public double getPerplexity(){return 0;}
+	public double getPerplexity(){
+		double sum = 0.0;
+		for(Integer page : PR.keySet()) {
+			sum = sum + (PR.get(page) * Math.log(PR.get(page)));
+		}
+		sum = sum * (-1.0);
+		return Math.pow(2.0, sum);
+	}
 	
 	/**
 	 * Returns true if the perplexity converges (hence, terminate the PageRank algorithm).
 	 * Returns false otherwise (and PageRank algorithm continue to update the page scores). 
 	 */
-	public boolean isConverge(){return false;}
+	public boolean isConverge(){
+		if(perplexity.size() < 4) return false;
+		else {
+			for(int i = perplexity.size()-4; i < perplexity.size()-1; i++) {
+				if((int) perplexity.get(i).doubleValue() % 10 !=  (int) perplexity.get(i+1).doubleValue() % 10) return false;
+			}
+		}
+		return true;
+	}
 	
 	/**
 	 * The main method of PageRank algorithm. 
@@ -149,7 +167,30 @@ public class PageRanker {
 	 * Where, for example, 0.1235 is the PageRank score of page 1.
 	 * 
 	 */
-	public void runPageRank(String perplexityOutFilename, String prOutFilename){}
+	public void runPageRank(String perplexityOutFilename, String prOutFilename){
+		while(!isConverge()){
+			double sinkPR = 0.0;
+			double newPR = 0.0;
+			for(Integer p : sinkNode) {
+				sinkPR = sinkPR + PR.get(p);
+			}
+			System.out.println("hello1!");
+			for(Integer p : pages) {
+				newPR = (1.0 - d) / pages.size();
+				newPR = newPR + (d * sinkPR / pages.size());
+				for(Integer q : linkToP.keySet()) {
+					if(outFromQ.containsKey(q)) newPR = newPR + (d * PR.get(q) / outFromQ.get(q));
+				}
+			}
+			System.out.println("hello4!");
+			for(Integer p : pages) {
+				PR.put(p, newPR);
+			}
+			System.out.println("hello5!");
+			perplexity.add(getPerplexity());
+			
+		}
+	}
 	
 	
 	/**
