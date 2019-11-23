@@ -20,3 +20,6 @@
 # End of https://www.gitignore.io/api/linux
 
 bin/
+perplexity.out
+pr_scores.out
+test.dat

@@ -2,16 +2,19 @@
 //ID: 5888136, 6088015, 6088064
 //Section: 3
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * This class implements PageRank algorithm on simple graph structure.
@@ -63,12 +66,12 @@ public class PageRanker {
 	 */
 
 	public void initialize(){
-		linkToP = new TreeMap<Integer, List<Integer>>();
-		outFromQ = new TreeMap<Integer, Integer>();
-		PR = new TreeMap<Integer, Double>();
-		outLink = new TreeSet<Integer>();
-		pages = new TreeSet<Integer>();
-		sinkNode = new TreeSet<Integer>();
+		linkToP = new HashMap<Integer, List<Integer>>();
+		outFromQ = new HashMap<Integer, Integer>();
+		PR = new HashMap<Integer, Double>();
+		outLink = new HashSet<Integer>();
+		pages = new HashSet<Integer>();
+		sinkNode = new HashSet<Integer>();
 		perplexity = new ArrayList<Double>();
 
 		for(String line : rawData) {
@@ -119,7 +122,7 @@ public class PageRanker {
 	public double getPerplexity(){
 		double sum = 0.0;
 		for(Integer page : PR.keySet()) {
-			sum = sum + (PR.get(page) * Math.log(PR.get(page)));
+			sum = sum + (PR.get(page) * (Math.log(PR.get(page))/Math.log(2)));
 		}
 		sum = sum * (-1.0);
 		return Math.pow(2.0, sum);
@@ -168,27 +171,56 @@ public class PageRanker {
 	 * 
 	 */
 	public void runPageRank(String perplexityOutFilename, String prOutFilename){
+		StringBuilder perplexityOut = new StringBuilder();
+		StringBuilder PROut = new StringBuilder();
 		while(!isConverge()){
 			double sinkPR = 0.0;
 			double newPR = 0.0;
+			double N = (double) pages.size();
 			for(Integer p : sinkNode) {
 				sinkPR = sinkPR + PR.get(p);
 			}
-			System.out.println("hello1!");
 			for(Integer p : pages) {
-				newPR = (1.0 - d) / pages.size();
-				newPR = newPR + (d * sinkPR / pages.size());
-				for(Integer q : linkToP.keySet()) {
-					if(outFromQ.containsKey(q)) newPR = newPR + (d * PR.get(q) / outFromQ.get(q));
+				newPR = (1.0 - d) / N;
+				newPR = newPR + (d * sinkPR / N);
+				for(Integer q : linkToP.get(p)) {
+					newPR = newPR + (d * PR.get(q) / outFromQ.get(q));
 				}
-			}
-			System.out.println("hello4!");
-			for(Integer p : pages) {
 				PR.put(p, newPR);
 			}
-			System.out.println("hello5!");
-			perplexity.add(getPerplexity());
-			
+			double thisPerplexity = getPerplexity();
+			perplexity.add(thisPerplexity);
+			perplexityOut.append(thisPerplexity+"\n");
+		}
+		for(Integer key : PR.keySet()) {
+			PROut.append(key.toString()+" "+PR.get(key).toString()+"\n");
+		}
+		File perplexityOutFile = new File(perplexityOutFilename);
+		File PROutFile = new File(prOutFilename);
+		BufferedWriter writer1 = null;
+		BufferedWriter writer2 = null;
+		try {
+		    writer1 = new BufferedWriter(new FileWriter(perplexityOutFile));
+		    writer2 = new BufferedWriter(new FileWriter(PROutFile));
+		    writer1.write(perplexityOut.toString());
+		    writer2.write(PROut.toString());
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+		    if (writer1 != null) {
+				try {
+					writer1.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		    }
+		    if (writer2 != null) {
+				try {
+					writer2.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		    }
 		}
 	}
 	
@@ -196,7 +228,23 @@ public class PageRanker {
 	/**
 	 * Return the top K page IDs, whose scores are highest.
 	 */
-	public Integer[] getRankedPages(int K){return null;}
+	public Integer[] getRankedPages(int K){
+		List<Map.Entry<Integer, Double>> sorted = new ArrayList<>(PR.entrySet());
+//		sorted.sort(Map.Entry.comparingByValue());
+		sorted.sort(new Comparator<Map.Entry<Integer, Double>>() {
+
+			@Override
+			public int compare(Map.Entry<Integer, Double> o1, Map.Entry<Integer, Double> o2) {
+				return -Double.compare(o1.getValue(), o2.getValue());
+			}
+			
+		});
+		Integer[] array = new Integer[K];
+		for(int i = 0; i < K; i++) {
+			array[i] = sorted.get(i).getKey();
+		}
+		return array;
+	}
 	
 	public static void main(String args[])
 	{
