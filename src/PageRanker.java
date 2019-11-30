@@ -239,8 +239,13 @@ public class PageRanker {
 			}
 			
 		});
-		Integer[] array = new Integer[K];
-		for(int i = 0; i < K; i++) {
+		
+		int num;
+		if(K > sorted.size()) num = sorted.size();
+		else num = K;
+			
+		Integer[] array = new Integer[num];
+		for(int i = 0; i < num; i++) {
 			array[i] = sorted.get(i).getKey();
 		}
 		return array;
@@ -250,7 +255,7 @@ public class PageRanker {
 	{
 	long startTime = System.currentTimeMillis();
 		PageRanker pageRanker =  new PageRanker();
-		pageRanker.loadData("citeseer.dat");
+		pageRanker.loadData("test.dat");
 		pageRanker.initialize();
 		pageRanker.runPageRank("perplexity.out", "pr_scores.out");
 		Integer[] rankedPages = pageRanker.getRankedPages(100);
