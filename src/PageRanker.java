@@ -113,6 +113,11 @@ public class PageRanker {
 		for(Integer key : pages) {
 			PR.put(key, initialPR);
 		}
+//		System.out.println(linkToP.toString());
+//		System.out.println(outFromQ.toString());
+//		System.out.println(outLink.toString());
+//		System.out.println(pages.toString());
+//		System.out.println(sinkNode.toString());
 	}
 	
 	/**
@@ -174,8 +179,9 @@ public class PageRanker {
 		StringBuilder perplexityOut = new StringBuilder();
 		StringBuilder PROut = new StringBuilder();
 		while(!isConverge()){
+			Map<Integer, Double> tempPR = new HashMap<Integer,Double>();
 			double sinkPR = 0.0;
-			double newPR = 0.0;
+			Double newPR = 0.0;
 			double N = (double) pages.size();
 			for(Integer p : sinkNode) {
 				sinkPR = sinkPR + PR.get(p);
@@ -186,7 +192,10 @@ public class PageRanker {
 				for(Integer q : linkToP.get(p)) {
 					newPR = newPR + (d * PR.get(q) / outFromQ.get(q));
 				}
-				PR.put(p, newPR);
+				tempPR.put(p, newPR);
+			}
+			for(Integer p : pages) {
+				PR.put(p, tempPR.get(p));
 			}
 			double thisPerplexity = getPerplexity();
 			perplexity.add(thisPerplexity);
@@ -230,7 +239,6 @@ public class PageRanker {
 	 */
 	public Integer[] getRankedPages(int K){
 		List<Map.Entry<Integer, Double>> sorted = new ArrayList<>(PR.entrySet());
-//		sorted.sort(Map.Entry.comparingByValue());
 		sorted.sort(new Comparator<Map.Entry<Integer, Double>>() {
 
 			@Override
@@ -255,7 +263,7 @@ public class PageRanker {
 	{
 	long startTime = System.currentTimeMillis();
 		PageRanker pageRanker =  new PageRanker();
-		pageRanker.loadData("test.dat");
+		pageRanker.loadData("citeseer.dat");
 		pageRanker.initialize();
 		pageRanker.runPageRank("perplexity.out", "pr_scores.out");
 		Integer[] rankedPages = pageRanker.getRankedPages(100);
